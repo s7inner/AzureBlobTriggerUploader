@@ -1,0 +1,169 @@
+﻿@page "/"
+@using FileUploadAzure.Services;
+@using System.Text.RegularExpressions;
+@inject IBlobStorageService blobStorageService
+
+<PageTitle>Index</PageTitle>
+<div class="container">
+    <h4>File Upload (Azure Blob Storage)</h4>
+    @if (!string.IsNullOrEmpty(warningMessage))
+    {
+        <div class="alert alert-warning">
+            <strong>Warning!</strong> @warningMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <strong>Error!</strong> @errorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">
+            <strong>Success!</strong> @successMessage
+        </div>
+    }
+
+    <EditForm Model="this" OnValidSubmit="OnUploadSubmit">
+        <div class="row">
+            <div class="col-sm-6">
+                <label>
+                    <InputFile class="form-control" disabled="@fileLoading" OnChange="@OnInputFileChange" accept=".docx" />
+                </label>
+                @if (fileLoading)
+                {
+                    <i class="fa fa-refresh"></i> <span>Loading...</span>
+                }
+            </div>
+            <div class="col-sm-2">
+                <button type="submit" disabled="@fileLoading" class="btn btn-primary">
+                    Upload File
+                </button>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-sm-6">
+                <InputText type="email" class="form-control" @bind-Value="userEmail" placeholder="Enter your email" required />
+                <ValidationMessage For="@(() => userEmail)" />
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private string warningMessage = "";
+    private string errorMessage = "";
+    private string successMessage = "";
+    private long maxFileSize = 1024 * 1024 * 5; // 5 MB
+    private bool fileLoading;
+    private string userEmail = "";
+    private IReadOnlyList<IBrowserFile>? selectedFiles;
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+    }
+
+    private async Task OnUploadSubmit()
+    {
+        // Очищення попередніх статусів перед завантаженням нового файлу
+        warningMessage = "";
+        errorMessage = "";
+        successMessage = "";
+
+        if (selectedFiles == null || selectedFiles.Count == 0)
+        {
+            warningMessage = "Please select a file to upload.";
+            return;
+        }
+
+        if (!ValidateForm())
+        {
+            return;
+        }
+
+        fileLoading = true;
+        this.StateHasChanged();
+
+        try
+        {
+            var file = selectedFiles[0];
+            var trustedFileNameForFileStorage = file.Name;
+            var blobUrl = await UploadFileToBlobAsync(trustedFileNameForFileStorage, file);
+
+            if (!string.IsNullOrEmpty(blobUrl))
+            {
+                successMessage = "File uploaded successfully!";
+            }
+            else
+            {
+                errorMessage = "File Upload failed, Please try again!!";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "File Upload failed, Please try again!!";
+        }
+
+        fileLoading = false;
+        this.StateHasChanged();
+    }
+
+    private bool ValidateForm()
+    {
+        var emailValid = ValidateEmail(userEmail);
+
+        if (!emailValid)
+        {
+            warningMessage = "Please enter a valid email address.";
+            return false;
+        }
+
+        if (selectedFiles == null || selectedFiles.Count == 0)
+        {
+            warningMessage = "Please select a file to upload.";
+            return false;
+        }
+
+        var file = selectedFiles[0];
+        if (file.Size > maxFileSize)
+        {
+            warningMessage = "Selected file exceeds the maximum allowed file size (5 MB).";
+            return false;
+        }
+
+        if (!file.Name.EndsWith(".docx", StringComparison.OrdinalIgnoreCase))
+        {
+            warningMessage = "Please select a file with the '.docx' extension.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task<string?> UploadFileToBlobAsync(string fileName, IBrowserFile file)
+    {
+        try
+        {
+            return await blobStorageService.UploadFileToBlobAsync(
+                fileName,
+                file.ContentType,
+                file.OpenReadStream((int)file.Size),
+                userEmail);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private bool ValidateEmail(string email)
+    {
+        var emailRegex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+        return emailRegex.IsMatch(email);
+    }
+}
