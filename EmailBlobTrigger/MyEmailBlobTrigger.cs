@@ -65,7 +65,7 @@ namespace EmailBlobTrigger
 
         public void SendEmail(string fileName, string toEmail, string blobSasUri, ILogger log)
         {
-            // Отримайте налаштування для SMTP сервера та електронної пошти в app settings або конфігурації
+            // Settings for SMTP server
             string smtpServer = "smtp.gmail.com";
             int smtpPort = 587;
             string smtpUsername = "ss7inner@gmail.com";
@@ -73,7 +73,7 @@ namespace EmailBlobTrigger
 
             string fromEmail = smtpUsername;
 
-            // Створіть об'єкт для відправлення електронних листів
+            // Object for sending e-mails
             SmtpClient smtpClient = new SmtpClient(smtpServer)
             {
                 Port = smtpPort,
@@ -81,7 +81,7 @@ namespace EmailBlobTrigger
                 EnableSsl = true
             };
 
-            // Створіть повідомлення
+            // Create a message
             MailMessage mail = new MailMessage
             {
                 From = new MailAddress(fromEmail),
@@ -92,7 +92,6 @@ namespace EmailBlobTrigger
 
             mail.To.Add(toEmail);
 
-            // Відправте електронний лист
             smtpClient.Send(mail);
             log.LogInformation("Електронний лист відправлено успішно.");
         }
