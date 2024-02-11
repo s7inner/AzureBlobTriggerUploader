@@ -7,13 +7,41 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.Extensions.Configuration;
 
 namespace EmailBlobTrigger
 {
     public class MyEmailBlobTrigger
     {
+        private readonly string storageAccountConnectionString;
+        private readonly string azureBlobContainerName;
+
+        //Data for SMTP mail sending
+        private readonly string smtpServer;
+        private readonly int smtpPort;
+        private readonly string smtpUsername;
+        private readonly string smtpGoogleAccountAppPassword;
+
+        public MyEmailBlobTrigger()
+        {
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            // Get Azure values from configuration
+            storageAccountConnectionString = configuration["Values:AzureWebJobsStorage"];
+            azureBlobContainerName = configuration["Values:AzureBlobContainerName"];
+
+            //Get values for SMTP mail sending from configuration
+            smtpServer = configuration["Values:smtpServer"];
+            smtpPort = int.Parse(configuration["Values:smtpPort"]);
+            smtpUsername = configuration["Values:smtpUsername"];
+            smtpGoogleAccountAppPassword = configuration["Values:smtpGoogleAccountAppPassword"];
+        }
+
         [FunctionName("MyEmailBlobTrigger")]
-        public void Run([BlobTrigger("file-upload/{name}", Connection = "AzureWebJobsStorage")] Stream blobStream, string name, IDictionary<string, string> metadata, ILogger log)
+        public void Run([BlobTrigger("%AzureBlobContainerName%/{name}", Connection = "AzureWebJobsStorage")] Stream blobStream, string name, IDictionary<string, string> metadata, ILogger log)
         {
            
             if (metadata != null && metadata.ContainsKey("email"))
@@ -35,10 +63,9 @@ namespace EmailBlobTrigger
 
         public string GenerateSasTokenForBlob(string blobName)
         {
-            string storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=ss7inner;AccountKey=ZoSmdSV69WsBtsvQ28U0/xdowqWYYOmUfDjEeIIGtZbSvCwL3gzZuOotUPRpLXw7PLXkDjAU/lkn+AStxRuUgg==;EndpointSuffix=core.windows.net";
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageAccountConnectionString);
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer container = blobClient.GetContainerReference("file-upload");
+            CloudBlobContainer container = blobClient.GetContainerReference(azureBlobContainerName);
             CloudBlockBlob blob = container.GetBlockBlobReference(blobName);
 
             SharedAccessBlobPolicy sasPolicy = new SharedAccessBlobPolicy
@@ -53,10 +80,9 @@ namespace EmailBlobTrigger
 
         public string GetBlobSasUri(string blobName, string sasToken)
         {
-            string storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=ss7inner;AccountKey=ZoSmdSV69WsBtsvQ28U0/xdowqWYYOmUfDjEeIIGtZbSvCwL3gzZuOotUPRpLXw7PLXkDjAU/lkn+AStxRuUgg==;EndpointSuffix=core.windows.net";
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageAccountConnectionString);
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer container = blobClient.GetContainerReference("file-upload");
+            CloudBlobContainer container = blobClient.GetContainerReference(azureBlobContainerName);
             CloudBlockBlob blob = container.GetBlockBlobReference(blobName);
 
             string blobSasUri = blob.Uri + sasToken;
@@ -65,19 +91,13 @@ namespace EmailBlobTrigger
 
         public void SendEmail(string fileName, string toEmail, string blobSasUri, ILogger log)
         {
-            // Settings for SMTP server
-            string smtpServer = "smtp.gmail.com";
-            int smtpPort = 587;
-            string smtpUsername = "ss7inner@gmail.com";
-            string smtpPassword = "mzyzwbxazpypejaf";
-
             string fromEmail = smtpUsername;
 
             // Object for sending e-mails
             SmtpClient smtpClient = new SmtpClient(smtpServer)
             {
                 Port = smtpPort,
-                Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+                Credentials = new NetworkCredential(smtpUsername, smtpGoogleAccountAppPassword),
                 EnableSsl = true
             };
 
@@ -85,16 +105,15 @@ namespace EmailBlobTrigger
             MailMessage mail = new MailMessage
             {
                 From = new MailAddress(fromEmail),
-                Subject = "Новий файл доданий",
-                Body = $"Назва файлу: {fileName}\nЕлектронна пошта: {toEmail}\nПосилання: {blobSasUri}",
+                Subject = "Test Task, new file added successfully!",
+                Body = $"The name of the file: {fileName}<br>File link: {blobSasUri}",
                 IsBodyHtml = true
             };
 
             mail.To.Add(toEmail);
 
             smtpClient.Send(mail);
-            log.LogInformation("Електронний лист відправлено успішно.");
+            log.LogInformation("Email sent successfully!");
         }
-
     }
 }

@@ -12,7 +12,7 @@ namespace FileUploadAzure.Services
         public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService> logger)
         {
             var blobStorageConnection = configuration.GetConnectionString("AzureStorageAccount");
-            _container = new BlobContainerClient(blobStorageConnection, "file-upload");
+            _container = new BlobContainerClient(blobStorageConnection, configuration["AzureBlobContainerName"]);
             _logger = logger;
         }
 

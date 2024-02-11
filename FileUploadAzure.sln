@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileUploadAzure", "FileUplo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmailBlobTrigger", "EmailBlobTrigger\EmailBlobTrigger.csproj", "{E34C2538-7748-4DAA-A3AE-D523B285F4DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileUploadAzure.Tests", "FileUploadAzure.Tests\FileUploadAzure.Tests.csproj", "{49FA64F4-44C2-4A43-94D3-A06280F036AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileUploadAzure.Tests", "FileUploadAzure.Tests\FileUploadAzure.Tests.csproj", "{49FA64F4-44C2-4A43-94D3-A06280F036AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

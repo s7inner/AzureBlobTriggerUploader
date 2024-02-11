@@ -1,7 +1,14 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=ss7inner;AccountKey=9kXN8VoeR+MxIw1HdviTi7mo3hbTuPa021R+6UENGLG2VAgzxClURYjVxWu7R/CS77phjiGrzEpB+AStSoHGHw==;EndpointSuffix=core.windows.net",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=defaultstoragesa1;AccountKey=VG3sGDDpKdG+76tbGCDfya/5klUkKGprU52bGSiIZF1pd5oWu7mNHda8lDquXaZUjWOJSWbU6NAw+ASt623EBQ==;EndpointSuffix=core.windows.net",
+    "AzureBlobContainerName": "defaultblobcontainer",
+
+    "smtpServer": "smtp.gmail.com",
+    "smtpPort": 587,
+    "smtpUsername": "ss7inner@gmail.com",
+    "smtpGoogleAccountAppPassword": "csidcihqubpkrjmr",
+
     "FUNCTIONS_WORKER_RUNTIME": "dotnet"
   }
 }
