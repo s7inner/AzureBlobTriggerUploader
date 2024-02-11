@@ -13,37 +13,13 @@ namespace EmailBlobTrigger
 {
     public class MyEmailBlobTrigger
     {
-        private readonly string storageAccountConnectionString;
-        private readonly string azureBlobContainerName;
-
-        //Data for SMTP mail sending
-        private readonly string smtpServer;
-        private readonly int smtpPort;
-        private readonly string smtpUsername;
-        private readonly string smtpGoogleAccountAppPassword;
-
-        public MyEmailBlobTrigger()
-        {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
-                .Build();
-
-            // Get Azure values from configuration
-            storageAccountConnectionString = configuration["Values:AzureWebJobsStorage"];
-            azureBlobContainerName = configuration["Values:AzureBlobContainerName"];
-
-            //Get values for SMTP mail sending from configuration
-            smtpServer = configuration["Values:smtpServer"];
-            smtpPort = int.Parse(configuration["Values:smtpPort"]);
-            smtpUsername = configuration["Values:smtpUsername"];
-            smtpGoogleAccountAppPassword = configuration["Values:smtpGoogleAccountAppPassword"];
-        }
+        private readonly string storageAccountConnectionString = "DefaultEndpointsProtocol=https;AccountName=defaultstoragesa1;AccountKey=VG3sGDDpKdG+76tbGCDfya/5klUkKGprU52bGSiIZF1pd5oWu7mNHda8lDquXaZUjWOJSWbU6NAw+ASt623EBQ==;EndpointSuffix=core.windows.net";
+        private readonly string azureBlobContainerName = "defaultblobcontainer";
 
         [FunctionName("MyEmailBlobTrigger")]
-        public void Run([BlobTrigger("%AzureBlobContainerName%/{name}", Connection = "AzureWebJobsStorage")] Stream blobStream, string name, IDictionary<string, string> metadata, ILogger log)
+        public void Run([BlobTrigger("defaultblobcontainer/{name}", Connection = "AzureWebJobsStorage")] Stream blobStream, string name, IDictionary<string, string> metadata, ILogger log)
         {
-           
+
             if (metadata != null && metadata.ContainsKey("email"))
             {
                 string email = metadata["email"];
@@ -91,6 +67,11 @@ namespace EmailBlobTrigger
 
         public void SendEmail(string fileName, string toEmail, string blobSasUri, ILogger log)
         {
+            string smtpServer = "smtp.gmail.com";
+            int smtpPort = 587;
+            string smtpUsername = "ss7inner@gmail.com";
+            string smtpGoogleAccountAppPassword = "csidcihqubpkrjmr";
+
             string fromEmail = smtpUsername;
 
             // Object for sending e-mails
@@ -106,7 +87,7 @@ namespace EmailBlobTrigger
             {
                 From = new MailAddress(fromEmail),
                 Subject = "Test Task, new file added successfully!",
-                Body = $"The name of the file: {fileName}<br>File link: {blobSasUri}",
+                Body = $"The name of the file: {fileName}<br><a href=\"{blobSasUri}\">{blobSasUri}</a>",
                 IsBodyHtml = true
             };
 

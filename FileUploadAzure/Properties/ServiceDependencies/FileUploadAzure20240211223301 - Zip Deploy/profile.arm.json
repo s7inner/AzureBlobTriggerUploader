@@ -21,7 +21,7 @@
     },
     "resourceName": {
       "type": "string",
-      "defaultValue": "EmailBlobTrigger20240211193913",
+      "defaultValue": "FileUploadAzure20240211223301",
       "metadata": {
         "description": "Name of the main resource to be created by this template."
       }
