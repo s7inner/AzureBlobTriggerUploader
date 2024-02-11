@@ -21,7 +21,6 @@ namespace EmailBlobTrigger.Tests
             _emailBlobTrigger = new MyEmailBlobTrigger();
             _loggerMock = new Mock<ILogger>();
         }
-
         [TestMethod]
         public void Run_ValidMetadata_SendsEmail()
         {
