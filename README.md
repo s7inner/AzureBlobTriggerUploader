@@ -9,3 +9,8 @@ The connection string can be found in Storage accounts -> Access keys -> Connect
 
 Also need to get the container name Storage accounts -> Containers -> {container name}:
 ![image](https://github.com/s7inner/AzureBlobTriggerUploader/assets/62800741/2675a6c8-f5b1-4289-98e9-11b942738798)
+
+SmtpClient was used to send the message, to send using gmail, you need to create a password for the application:
+![image](https://github.com/s7inner/AzureBlobTriggerUploader/assets/62800741/408129f0-31bf-402e-8b64-4ee92d784321)
+
+
